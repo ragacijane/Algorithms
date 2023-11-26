@@ -68,27 +68,32 @@ void refraction(Node *temp,Data* data){
         right=new Node(temp->getNodeSize());
         Data* tempData;
 
-        int middle=temp->keys.size()/2;
+        int middle=(temp->keys.size()-1)/2;
         tempData=temp->keys[middle];
         //splitting overfull node
         for(i=0;i<temp->keys.size();i++){
             if(i<middle){
                 left->keys.push_back(temp->keys[i]);
-                left->branches.push_back(temp->branches[i]);
+                if(temp->branches.size()>0)left->branches.push_back(temp->branches[i]);
             }
             if(i==middle)
-                left->branches.push_back(temp->branches[i]);
+                if(temp->branches.size()>0)left->branches.push_back(temp->branches[i]);
             if(i>middle){
                 right->keys.push_back(temp->keys[i]);
-                right->branches.push_back(temp->branches[i]);
+                if(temp->branches.size()>0)right->branches.push_back(temp->branches[i]);
             }
         }
-        right->branches.push_back(temp->branches[i]);
+        if(temp->branches.size()>0)right->branches.push_back(temp->branches[i]);
 
         if(temp->leaf){
             left->leaf=right->leaf=true;
         }
-
+        if(left->branches.size()>0)
+            for(int i=0;i<left->branches.size();i++)
+                left->branches[i]->parent=left;
+        if(right->branches.size()>0)
+            for(int i=0;i<right->branches.size();i++)
+                right->branches[i]->parent=right;
         if(temp->root){
             temp->keys.clear();
             temp->branches.clear();
@@ -110,14 +115,14 @@ void refraction(Node *temp,Data* data){
         sort(parent->branches.begin(),parent->branches.end(),compareNode);
 
         temp=parent;
-    }while(temp->overFull() || !temp->root);
+    }while(temp->overFull());
 }
 
 // DONE
 void addKey(Node* root,Data* data){
     Node* temp=root;
     if(!temp->isFull() && temp->leaf){
-        if(temp->keys.empty())
+        //if(temp->keys.empty())
             //temp->branches.push_back(NULL);
         temp->keys.push_back(data);
         //temp->branches.push_back(NULL);
@@ -179,9 +184,13 @@ int main(){
     addKey(tree,new Data(4));
     addKey(tree,new Data(6));
     addKey(tree,new Data(8));
+    addKey(tree,new Data(9));
+    addKey(tree,new Data(10));
+    addKey(tree,new Data(11));
     cout<<*tree;
     cout<<endl;
     cout<<*tree->branches[0];
     cout<<*tree->branches[1];
+    cout<<*tree->branches[2];
     return 0;
 }
