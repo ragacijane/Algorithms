@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <iomanip>
 
 using namespace std;
 
@@ -10,7 +11,6 @@ class Data{
     public:
         Data(int x){
             value = x;
-            cout << "Data created with value " << value << " yep!" << endl;
         };
         int getValue(){return value;}
 };
@@ -30,11 +30,23 @@ class Node{
             minBranches = m/2+1;
             branches.push_back(NULL);
             leaf=root=false;
-            cout << "Node created!" << endl;
         }
-        bool overFull(){return (keys.size() > maxKeys)?false:true;}
+        bool overFull(){return (keys.size() > maxKeys)?true:false;}
         bool isFull(){return (keys.size() < maxKeys)?false:true;}
         int getNodeSize(){return maxBranches;}
+        friend ostream& operator<<(ostream& os,const Node &n){
+            int i;
+            os<<"(";
+            for(i=0; i<n.maxBranches-1; i++){
+                if(i<n.keys.size())
+                    os<<setw(2)<<n.keys[i]->getValue();
+                else os<<setw(2)<<" ";
+
+                if(i == n.maxBranches-2)os<<")";
+                else os<<"|";
+            }
+            return os;
+        }
 };
 
 bool compareVec(Data *d1, Data *d2){
@@ -42,7 +54,9 @@ bool compareVec(Data *d1, Data *d2){
 }
 
 bool compareNode(Node* n1,Node* n2){
-    return n1->keys[0]->getValue() < n2->keys[0]->getValue();
+    if(n1!=NULL && n2!=NULL)
+        return n1->keys[0]->getValue() < n2->keys[0]->getValue();
+    else return true;
 }
 
 // DONE
@@ -54,7 +68,7 @@ void refraction(Node *temp,Data* data){
         right=new Node(temp->getNodeSize());
         Data* tempData;
 
-        int middle=temp->keys.size();
+        int middle=temp->keys.size()/2;
         tempData=temp->keys[middle];
         //splitting overfull node
         for(i=0;i<temp->keys.size();i++){
@@ -84,16 +98,19 @@ void refraction(Node *temp,Data* data){
         else{
             destroy=temp;
             parent=temp->parent;
+            for(int i=0;i<parent->branches.size(); i++)
+                if(parent->branches[i] == temp)parent->branches.erase(parent->branches.begin()+i);
             delete(destroy);
         }
         parent->keys.push_back(tempData);
         sort(parent->keys.begin(),parent->keys.end(),compareVec);
+        left->parent=right->parent=parent;
         parent->branches.push_back(left);
         parent->branches.push_back(right);
         sort(parent->branches.begin(),parent->branches.end(),compareNode);
 
         temp=parent;
-    }while(!temp->overFull());
+    }while(temp->overFull() || !temp->root);
 }
 
 // DONE
@@ -108,13 +125,17 @@ void addKey(Node* root,Data* data){
     }
     else {
         while(!temp->leaf){
-        for(int i=0; i< temp->keys.size(); i++)
-            if( temp->keys[i]->getValue() > data->getValue())
-                temp=temp->branches[i];
-            else if( i == temp->keys.size()-1 && temp->keys[i]->getValue() < data->getValue())
-                temp=temp->branches[i+1];
+            for(int i=0; i< temp->keys.size(); i++){
+                if( temp->keys[i]->getValue() > data->getValue()){
+                    temp=temp->branches[i];
+                    break;
+                }
+                else if( i == temp->keys.size()-1 && temp->keys[i]->getValue() < data->getValue()){
+                    temp=temp->branches[i+1];
+                    break;
+                }
+            }   
         }
-        
         temp->keys.push_back(data);
         temp->branches.push_back(NULL);
         sort(temp->keys.begin(),temp->keys.end(),compareVec);
@@ -125,15 +146,19 @@ void addKey(Node* root,Data* data){
 }
 
 // TODO
+void compression(){
+
+}
+
+// TODO
 void deleteKey(){
 
 }
 
 // TODO
-void compression(){
+void printTree(Node* root){
 
 }
-
 // TODO test adding and writting
 int main(){
     int m = 0;
@@ -145,6 +170,16 @@ int main(){
     }
     Node* tree = new Node(m);
     tree->root=tree->leaf=true;
-    cout << tree->branches[0]<< " " << tree->branches[1] << endl;
+    addKey(tree,new Data(3));
+    addKey(tree,new Data(2));
+    addKey(tree,new Data(7));
+    addKey(tree,new Data(5));
+    addKey(tree,new Data(1));
+    addKey(tree,new Data(0));
+    cout<<*tree;
+    cout<<endl;
+    cout<<*tree->branches[0];
+    cout<<*tree->branches[1];
+    cout<<*tree->branches[2];
     return 0;
 }
