@@ -28,7 +28,7 @@ class Node{
             maxKeys = m-1;
             minKeys = m/2;
             minBranches = m/2+1;
-            branches.push_back(NULL);
+            //branches.push_back(NULL);
             leaf=root=false;
         }
         bool overFull(){return (keys.size() > maxKeys)?true:false;}
@@ -54,7 +54,7 @@ bool compareVec(Data *d1, Data *d2){
 }
 
 bool compareNode(Node* n1,Node* n2){
-    if(n1!=NULL && n2!=NULL)
+    if(n1!=nullptr && n2!=nullptr)
         return n1->keys[0]->getValue() < n2->keys[0]->getValue();
     else return true;
 }
@@ -85,7 +85,7 @@ void refraction(Node *temp,Data* data){
         }
         right->branches.push_back(temp->branches[i]);
 
-        if(left->branches[0]==NULL){
+        if(temp->leaf){
             left->leaf=right->leaf=true;
         }
 
@@ -118,9 +118,9 @@ void addKey(Node* root,Data* data){
     Node* temp=root;
     if(!temp->isFull() && temp->leaf){
         if(temp->keys.empty())
-            temp->branches.push_back(NULL);
+            //temp->branches.push_back(NULL);
         temp->keys.push_back(data);
-        temp->branches.push_back(NULL);
+        //temp->branches.push_back(NULL);
         sort(temp->keys.begin(),temp->keys.end(),compareVec);
     }
     else {
@@ -137,7 +137,7 @@ void addKey(Node* root,Data* data){
             }   
         }
         temp->keys.push_back(data);
-        temp->branches.push_back(NULL);
+        //temp->branches.push_back(NULL);
         sort(temp->keys.begin(),temp->keys.end(),compareVec);
 
         if(temp->overFull())
@@ -176,10 +176,12 @@ int main(){
     addKey(tree,new Data(5));
     addKey(tree,new Data(1));
     addKey(tree,new Data(0));
+    addKey(tree,new Data(4));
+    addKey(tree,new Data(6));
+    addKey(tree,new Data(8));
     cout<<*tree;
     cout<<endl;
     cout<<*tree->branches[0];
     cout<<*tree->branches[1];
-    cout<<*tree->branches[2];
     return 0;
 }
