@@ -19,7 +19,7 @@ class Node{
     private:
         int minKeys, maxKeys, minBranches, maxBranches;
     public:
-        bool node,leaf,root;
+        bool leaf,root;
         vector<Data*> keys;
         vector<Node*> branches;
         Node* parent;
@@ -30,7 +30,6 @@ class Node{
             minBranches = m/2+1;
             branches.push_back(nullptr);
             leaf=root=false;
-            node=true;
             cout << "Node created!" << endl;
         }
         bool isFull(){return (keys.size() < maxKeys)?false:true;}
@@ -72,14 +71,16 @@ void addKey(Node* temp,Data* data){
 void refractionLeaf(Node *temp,Data* data){
     Node* left,*right,*parent,*destroy;
     vector<Data*> datas;
+    //get keys align and find middle one
     for(int i=0; i<temp->keys.size();i++)datas.push_back(temp->keys[i]);
     datas.push_back(data);
     sort(temp->keys.begin(),temp->keys.end(),compareVec);
     int middle=datas.size()/2;
+    //creating left and right node
     left=new Node(temp->getNodeSize());
+    left->leaf=true;
     right=new Node(temp->getNodeSize());
-    destroy=temp;
-    parent=left->parent=right->parent=temp->parent;
+    right->leaf=true;
     for(int i=0;i<datas.size();i++){
         if(i<middle){
             left->keys.push_back(datas[i]);
@@ -90,22 +91,67 @@ void refractionLeaf(Node *temp,Data* data){
             right->branches.push_back(nullptr);
         }
     }
-    if(parent->isFull())refractionNode();
-    else{
-        parent->keys.push_back(datas[middle]);
+
+    if(temp->root){
+        temp->keys.clear();
+        temp->branches.clear();
+        parent=temp;
+    }
+    else{//FIXME    Dealocate temp
+        destroy=temp;
+        parent=temp->parent;
+    }
+
+    parent->keys.push_back(datas[middle]);
+    sort(parent->keys.begin(),parent->keys.end(),compareVec);
+    parent->branches.push_back(left);
+    parent->branches.push_back(right);
+    sort(parent->branches.begin(),parent->branches.end(),compareNode);
+    // refractionNode
+    if(parent->isFull())
+        refractionNode(parent);
+}
+
+// FIXME need to return pointer on root
+void refractionNode(Node* temp){
+    do{
+        Node* parent,*destroy;
+        Node* left=new Node(temp->getNodeSize());
+        Node* right=new Node(temp->getNodeSize());
+        Data* tempData;
+
+        int middle=temp->keys.size();
+        tempData=temp->keys[middle];
+        for(int i=0;i<temp->keys.size();i++){
+        if(i<middle){
+            left->keys.push_back(temp->keys[i]);
+            left->branches.push_back(nullptr);
+        }
+        if(i>middle){
+            right->keys.push_back(temp->keys[i]);
+            right->branches.push_back(nullptr);
+        }
+
+        if(temp->root){
+            temp->keys.clear();
+            temp->branches.clear();
+            parent=temp;
+        }
+        else{//FIXME    Dealocate temp
+            destroy=temp;
+            parent=temp->parent;
+        }
+        parent->keys.push_back(tempData);
         sort(parent->keys.begin(),parent->keys.end(),compareVec);
         parent->branches.push_back(left);
         parent->branches.push_back(right);
-        sort(temp->branches.begin(),temp->branches.end(),compareNode);
+        sort(parent->branches.begin(),parent->branches.end(),compareNode);
+
+        temp=parent;
     }
-
+    }while(!temp->isFull());
 }
-
-// TODO
-void refractionNode(){
-
-}
-
+//TODO test adding and writting
 int main(){
     int m = 0;
     Data* dat;
