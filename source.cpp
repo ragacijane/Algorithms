@@ -160,27 +160,54 @@ void compression(){
 
 }
 
-// TODO
-void deleteKey(Node* root,int data){
+// DONE
+Node* swapKeys(Node* curent, int data){
     int i;
-    Node* temp=root, *parent;
+    Node* temp=curent;
+    Data* tempData;
+    for(i=0; i< temp->keys.size(); i++)
+        if(temp->keys[i]->getValue() == data){
+            temp=temp->branches[i+1];
+            break;
+        }
+                    
+    while(!temp->leaf)
+        temp=temp->branches[0];
+    tempData=temp->keys[0];
+    temp->keys[0]=curent->keys[i];
+    curent->keys[i]=tempData;
+    return temp;
+}
+
+// DONE
+Node* findNode(Node* root,int data){
+    Node* temp=root;
     bool found=false;
     while(!found){
-        for(i=0; i< temp->keys.size(); i++){
-                if( temp->keys[i]->getValue() > data){
-                    temp=temp->branches[i];
+        for(int i=0; i< temp->keys.size(); i++){
+                if(temp->keys[i]->getValue() == data){
+                    found=true;
                     break;
                 }
                 else if( i == temp->keys.size()-1 && temp->keys[i]->getValue() < data){
                     temp=temp->branches[i+1];
                     break;
                 }
-                else if(temp->keys[i]->getValue() == data){
-                    found=true;
+                else if( temp->keys[i]->getValue() > data){
+                    temp=temp->branches[i];
                     break;
                 }
             } 
     }
+    return temp;
+}
+
+// TODO
+void deleteKey(Node* root,int data){
+    int i;
+    Node* parent, *temp=findNode(root,data);
+    // DONE ako nije u listu
+    if(!temp->leaf)temp=swapKeys(temp,data);
     //ako je u listu
     if(temp->leaf){
         //obrisi
@@ -195,7 +222,6 @@ void deleteKey(Node* root,int data){
                     //ako moze da pozajmi
                 if(i+1 < parent->branches.size() && parent->branches[i+1]->canBorrow()){
                     // DONE pozajmljuje od desnog
-                        cout<<"Desni pozajmljuje";
                         temp->keys.push_back(parent->keys[i]);
                         parent->keys[i]=parent->branches[i+1]->keys[0];
                         parent->branches[i+1]->keys.erase(parent->branches[i+1]->keys.begin());
@@ -203,18 +229,17 @@ void deleteKey(Node* root,int data){
                 }
                     // DONE pozajmljuje od levog
                 else if(i-1 >= 0 && parent->branches[i-1]->canBorrow()){
-                        cout<<"Levi pozajmljuje";
                         temp->keys.push_back(parent->keys[i-1]);
                         parent->keys[i-1]=parent->branches[i-1]->keys.back();
                         parent->branches[i-1]->keys.erase(parent->branches[i-1]->keys.end() - 1);
                         sort(temp->keys.begin(),temp->keys.end(),compareVec);
                 }
                 else if(i+1 < parent->branches.size()){//ako ima desnog brata TODO
-                        cout<<"Spajanje ako postoji desni";
                         temp->keys.push_back(parent->keys[i]);
                         temp->keys.push_back(parent->branches[i+1]->keys.back());
                         parent->branches.erase(parent->branches.begin()+i+1);
                         parent->keys.erase(parent->keys.begin()+i);
+                        //sort(temp->keys.begin(),temp->keys.end(),compareVec);
                         if(parent->keys.empty()){
                             cout<<"Poziva se prelamanje";
                         }
@@ -222,6 +247,7 @@ void deleteKey(Node* root,int data){
                     parent->branches[i-1]->keys.push_back(parent->keys[i-1]);
                     parent->keys.erase(parent->keys.end()-1);
                     parent->branches.erase(parent->branches.begin()+i);
+                    //sort(temp->keys.begin(),temp->keys.end(),compareVec);
                     if(parent->keys.empty()){
                         cout<<"Poziva se prelamanje";
                     }
@@ -259,14 +285,14 @@ int main(){
     addKey(tree,new Data(9));
     addKey(tree,new Data(10));
     addKey(tree,new Data(11));
-    deleteKey(tree,4);
-    deleteKey(tree,8);
-    deleteKey(tree,11);
-    deleteKey(tree,6);
+    //deleteKey(tree,4);
+    //deleteKey(tree,8);
+    //deleteKey(tree,11);
+    //deleteKey(tree,6);
+    deleteKey(tree,5);
     cout<<*tree;
     cout<<endl;
     cout<<*tree->branches[0];
     cout<<*tree->branches[1];
-    cout<<*tree->branches[2];
     return 0;
 }
