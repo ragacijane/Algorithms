@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
+#include <cmath>
 
 using namespace std;
 
@@ -14,7 +15,7 @@ class Data{
         };
         int getValue(){return value;}
 };
-
+// TODO get min keys max keys based on root or leaf
 class Node{
     private:
         int minKeys, maxKeys, minBranches, maxBranches;
@@ -26,13 +27,15 @@ class Node{
         Node(int m){
             maxBranches = m;
             maxKeys = m-1;
-            minKeys = m/2;
+            minKeys = ceil(m*1.0/2)-1;
             minBranches = m/2+1;
             //branches.push_back(NULL);
             leaf=root=false;
         }
         bool overFull(){return (keys.size() > maxKeys)?true:false;}
         bool isFull(){return (keys.size() < maxKeys)?false:true;}
+        bool isEnoughKeys(){return keys.size() >= minKeys;}
+        bool canBorrow(){return keys.size() > minKeys;}
         int getNodeSize(){return maxBranches;}
         friend ostream& operator<<(ostream& os,const Node &n){
             int i;
@@ -88,12 +91,14 @@ void refraction(Node *temp,Data* data){
         if(temp->leaf){
             left->leaf=right->leaf=true;
         }
+        //setting up parents
         if(left->branches.size()>0)
             for(int i=0;i<left->branches.size();i++)
                 left->branches[i]->parent=left;
         if(right->branches.size()>0)
             for(int i=0;i<right->branches.size();i++)
                 right->branches[i]->parent=right;
+
         if(temp->root){
             temp->keys.clear();
             temp->branches.clear();
@@ -156,8 +161,75 @@ void compression(){
 }
 
 // TODO
-void deleteKey(){
-
+void deleteKey(Node* root,int data){
+    int i;
+    Node* temp=root, *parent;
+    bool found=false;
+    while(!found){
+        for(i=0; i< temp->keys.size(); i++){
+                if( temp->keys[i]->getValue() > data){
+                    temp=temp->branches[i];
+                    break;
+                }
+                else if( i == temp->keys.size()-1 && temp->keys[i]->getValue() < data){
+                    temp=temp->branches[i+1];
+                    break;
+                }
+                else if(temp->keys[i]->getValue() == data){
+                    found=true;
+                    break;
+                }
+            } 
+    }
+    //ako je u listu
+    if(temp->leaf){
+        //obrisi
+        for(i=0;i<temp->keys.size(); i++){
+                if(temp->keys[i]->getValue() == data)temp->keys.erase(temp->keys.begin()+i);
+        }
+        if(!temp->isEnoughKeys()){//2. ako nema dovoljno kljuceva i nije koren
+            if(!temp->root){
+                parent=temp->parent;
+                for(i=0;i<parent->branches.size(); i++)
+                    if(parent->branches[i] == temp)break;
+                    //ako moze da pozajmi
+                if(i+1 < parent->branches.size() && parent->branches[i+1]->canBorrow()){
+                    // DONE pozajmljuje od desnog
+                        cout<<"Desni pozajmljuje";
+                        temp->keys.push_back(parent->keys[i]);
+                        parent->keys[i]=parent->branches[i+1]->keys[0];
+                        parent->branches[i+1]->keys.erase(parent->branches[i+1]->keys.begin());
+                        sort(temp->keys.begin(),temp->keys.end(),compareVec);
+                }
+                    // DONE pozajmljuje od levog
+                else if(i-1 >= 0 && parent->branches[i-1]->canBorrow()){
+                        cout<<"Levi pozajmljuje";
+                        temp->keys.push_back(parent->keys[i-1]);
+                        parent->keys[i-1]=parent->branches[i-1]->keys.back();
+                        parent->branches[i-1]->keys.erase(parent->branches[i-1]->keys.end() - 1);
+                        sort(temp->keys.begin(),temp->keys.end(),compareVec);
+                }
+                else if(i+1 < parent->branches.size()){//ako ima desnog brata TODO
+                        cout<<"Spajanje ako postoji desni";
+                        temp->keys.push_back(parent->keys[i]);
+                        temp->keys.push_back(parent->branches[i+1]->keys.back());
+                        parent->branches.erase(parent->branches.begin()+i+1);
+                        parent->keys.erase(parent->keys.begin()+i);
+                        if(parent->keys.empty()){
+                            cout<<"Poziva se prelamanje";
+                        }
+                }else{// ako nema desnog brata TODO
+                    parent->branches[i-1]->keys.push_back(parent->keys[i-1]);
+                    parent->keys.erase(parent->keys.end()-1);
+                    parent->branches.erase(parent->branches.begin()+i);
+                    if(parent->keys.empty()){
+                        cout<<"Poziva se prelamanje";
+                    }
+                }
+            }
+        
+        }
+    }
 }
 
 // TODO
@@ -187,6 +259,10 @@ int main(){
     addKey(tree,new Data(9));
     addKey(tree,new Data(10));
     addKey(tree,new Data(11));
+    deleteKey(tree,4);
+    deleteKey(tree,8);
+    deleteKey(tree,11);
+    deleteKey(tree,6);
     cout<<*tree;
     cout<<endl;
     cout<<*tree->branches[0];
