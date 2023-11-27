@@ -3,8 +3,27 @@
 #include <algorithm>
 #include <iomanip>
 #include <cmath>
+#include <fstream>
+#include <string>
+#include <regex>
 
 using namespace std;
+// TODO Parse line
+class Account
+{
+public:
+    string CA_ID, CA_B_ID, CA_C_ID,
+        CA_NAME, CA_TAX_ST, CA_BAL;
+    Account(string line)
+    {
+        CA_ID = line.substr(0, line.find('|'));
+        line = line.substr(line.find('|') + 1);
+        CA_B_ID = line.substr(0, line.find('|'));
+        line = line.substr(line.find('|') + 1);
+        CA_C_ID = line.substr(0, line.find('|'));
+        line = line.substr(line.find('|') + 1);
+    }
+};
 
 class Data
 {
@@ -12,11 +31,17 @@ private:
     int value;
 
 public:
-    Data(int x)
+    vector<Account *> accounts;
+    Data(Account *acc)
     {
-        value = x;
+        accounts.push_back(acc);
+        value = atoi(acc->CA_C_ID.substr(acc->CA_C_ID.length() - 4).c_str());
     };
     int getValue() { return value; }
+    void pushAcc(Account *acc)
+    {
+        accounts.push_back(acc);
+    }
 };
 // TODO get min keys max keys based on root or leaf
 class Node
@@ -354,11 +379,12 @@ void printTree(Node *root)
 {
 }
 
-// TODO test deleting
+// TODO Make duplicated keys
 int main()
 {
     int m = 0;
     Data *dat;
+    string line;
     while (m < 3 || m > 10)
     {
         cout << "Input node size: ";
@@ -368,32 +394,47 @@ int main()
     }
     Node *tree = new Node(m);
     tree->root = tree->leaf = true;
-    addKey(tree, new Data(3));
-    addKey(tree, new Data(2));
-    addKey(tree, new Data(7));
-    addKey(tree, new Data(5));
-    addKey(tree, new Data(1));
-    addKey(tree, new Data(0));
-    addKey(tree, new Data(4));
-    addKey(tree, new Data(6));
-    addKey(tree, new Data(8));
-    addKey(tree, new Data(9));
-    addKey(tree, new Data(10));
-    addKey(tree, new Data(11));
-    // deleteKey(tree,4);
-    // deleteKey(tree,8);
-    // deleteKey(tree,11);
-    // deleteKey(tree,6);
-    deleteKey(tree, 5);
-    deleteKey(tree, 10);
-    deleteKey(tree, 11);
-    deleteKey(tree, 9);
-    addKey(tree, new Data(10));
-    addKey(tree, new Data(11));
-    cout << *tree;
-    cout << endl;
-    cout << *tree->branches[0];
-    cout << *tree->branches[1];
-    cout << *tree->branches[2];
+
+    ifstream customerAcc("CustomerAccount20.txt");
+
+    if (customerAcc.is_open())
+    {
+
+        while (getline(customerAcc, line))
+        {
+            Data *test = new Data(new Account(line));
+            cout << test->getValue() << endl;
+        }
+        customerAcc.close();
+    }
+    else
+        cout << "Unable to open file";
+
     return 0;
 }
+
+// cout << *tree->branches[0];
+// cout << *tree->branches[1];
+// cout << *tree->branches[2];
+// addKey(tree, new Data(3));
+// addKey(tree, new Data(2));
+// addKey(tree, new Data(7));
+// addKey(tree, new Data(5));
+// addKey(tree, new Data(1));
+// addKey(tree, new Data(0));
+// addKey(tree, new Data(4));
+// addKey(tree, new Data(6));
+// addKey(tree, new Data(8));
+// addKey(tree, new Data(9));
+// addKey(tree, new Data(10));
+// addKey(tree, new Data(11));
+// deleteKey(tree,4);
+// deleteKey(tree,8);
+// deleteKey(tree,11);
+// deleteKey(tree,6);
+// deleteKey(tree, 5);
+// deleteKey(tree, 10);
+// deleteKey(tree, 11);
+// deleteKey(tree, 9);
+// addKey(tree, new Data(10));
+// addKey(tree, new Data(11));
