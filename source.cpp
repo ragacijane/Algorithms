@@ -8,7 +8,7 @@
 #include <regex>
 
 using namespace std;
-// TODO Parse line
+// TODO check privacy of classes
 class Account
 {
 public:
@@ -22,9 +22,20 @@ public:
         line = line.substr(line.find('|') + 1);
         CA_C_ID = line.substr(0, line.find('|'));
         line = line.substr(line.find('|') + 1);
+        CA_NAME = line.substr(0, line.find('|'));
+        line = line.substr(line.find('|') + 1);
+        CA_TAX_ST = line.substr(0, line.find('|'));
+        line = line.substr(line.find('|') + 1);
+        CA_BAL = line.substr(0, line.find('|'));
+        line = line.substr(line.find('|') + 1);
+    }
+    friend ostream &operator<<(ostream &os, const Account *acc)
+    {
+        return os << acc->CA_ID << "|" << acc->CA_C_ID << "|" << acc->CA_TAX_ST << "|" << acc->CA_BAL;
     }
 };
 
+// TODO check privacy
 class Data
 {
 private:
@@ -43,6 +54,7 @@ public:
         accounts.push_back(acc);
     }
 };
+
 // TODO get min keys max keys based on root or leaf
 class Node
 {
@@ -88,11 +100,13 @@ public:
     }
 };
 
+// DONE
 bool compareVec(Data *d1, Data *d2)
 {
     return d1->getValue() < d2->getValue();
 }
 
+// DONE
 bool compareNode(Node *n1, Node *n2)
 {
     if (n1 != nullptr && n2 != nullptr)
@@ -176,16 +190,30 @@ void refraction(Node *temp, Data *data)
 }
 
 // DONE
+void insertCAKey(Node *temp, Data *data)
+{
+    bool added = false;
+    for (int i = 0; i < temp->keys.size(); i++)
+        if (data->getValue() == temp->keys[i]->getValue())
+        {
+            temp->keys[i]->accounts.push_back(data->accounts.back());
+            added = true;
+            delete data;
+        }
+    if (!added)
+    {
+        temp->keys.push_back(data);
+        sort(temp->keys.begin(), temp->keys.end(), compareVec);
+    }
+}
+
+// DONE
 void addKey(Node *root, Data *data)
 {
     Node *temp = root;
     if (!temp->isFull() && temp->leaf)
     {
-        // if(temp->keys.empty())
-        // temp->branches.push_back(NULL);
-        temp->keys.push_back(data);
-        // temp->branches.push_back(NULL);
-        sort(temp->keys.begin(), temp->keys.end(), compareVec);
+        insertCAKey(temp, data);
     }
     else
     {
@@ -205,16 +233,13 @@ void addKey(Node *root, Data *data)
                 }
             }
         }
-        temp->keys.push_back(data);
-        // temp->branches.push_back(NULL);
-        sort(temp->keys.begin(), temp->keys.end(), compareVec);
-
+        insertCAKey(temp, data);
         if (temp->overFull())
             refraction(temp, data);
     }
 }
 
-// TODO
+// DONE
 Node *compression(Node *temp)
 {
     int i;
@@ -227,7 +252,7 @@ Node *compression(Node *temp)
             if (parent->branches[i] == temp)
                 break;
         if (i + 1 < parent->branches.size())
-        { // ima desnog brata TODO obrisi temp i njegovu povezanost na parenta
+        { // having right one
             host = parent->branches[i + 1];
             host->keys.insert(host->keys.begin(), parent->keys.back());
             host->branches.insert(host->branches.begin(), branch);
@@ -236,7 +261,8 @@ Node *compression(Node *temp)
             parent->branches.erase(parent->branches.begin() + i);
             destroy = temp;
             temp = parent;
-        } // ako nema desnog brata
+            delete destroy;
+        } // not having right one
         else
         {
             host = parent->branches[i - 1];
@@ -276,10 +302,11 @@ Node *swapKeys(Node *curent, int data)
 }
 
 // DONE
-Node *findNode(Node *root, int data)
+Node *findNode(Node *root, int data, int &numstep)
 {
     Node *temp = root;
     bool found = false;
+    int cnt = 0;
     while (!found)
     {
         for (int i = 0; i < temp->keys.size(); i++)
@@ -291,16 +318,30 @@ Node *findNode(Node *root, int data)
             }
             else if (i == temp->keys.size() - 1 && temp->keys[i]->getValue() < data)
             {
-                temp = temp->branches[i + 1];
+                if (!temp->leaf)
+                {
+                    temp = temp->branches[i + 1];
+                    cnt++;
+                }
+                else
+                    return NULL;
                 break;
             }
             else if (temp->keys[i]->getValue() > data)
             {
-                temp = temp->branches[i];
+                if (!temp->leaf)
+                {
+                    temp = temp->branches[i];
+                    cnt++;
+                }
+                else
+                    return NULL;
                 break;
             }
         }
     }
+
+    numstep = cnt;
     return temp;
 }
 
@@ -308,7 +349,7 @@ Node *findNode(Node *root, int data)
 void deleteKey(Node *&root, int data)
 {
     int i;
-    Node *parent, *temp = findNode(root, data);
+    Node *parent, *temp = findNode(root, data, i);
     // DONE ako nije u listu
     if (!temp->leaf)
         temp = swapKeys(temp, data);
@@ -379,12 +420,29 @@ void printTree(Node *root)
 {
 }
 
-// TODO Make duplicated keys
+// DONE
+Data *findKey(Node *temp, int data)
+{
+    Data *found = NULL;
+    if (temp != NULL)
+        for (int i = 0; i < temp->keys.size(); i++)
+        {
+            if (temp->keys[i]->getValue() == data)
+            {
+                found = temp->keys[i];
+                break;
+            }
+        }
+    return found;
+}
+
+// TODO create menu
 int main()
 {
-    int m = 0;
-    Data *dat;
-    string line;
+    int m = 0, keyValue, numStep = 0;
+    Data *dataNode;
+    Node *tree, *temp;
+    string line, userID, userData, userDataFinal;
     while (m < 3 || m > 10)
     {
         cout << "Input node size: ";
@@ -392,49 +450,91 @@ int main()
         if (m < 3 || m > 10)
             cout << "Node size is out of range. Size should be between 3 and 10." << endl;
     }
-    Node *tree = new Node(m);
-    tree->root = tree->leaf = true;
 
-    ifstream customerAcc("CustomerAccount20.txt");
+    tree = new Node(m);
+    tree->root = tree->leaf = true;
+    // DONE Creating tree
+    ifstream customerAcc("CustomerAccount250.txt");
 
     if (customerAcc.is_open())
     {
 
         while (getline(customerAcc, line))
         {
-            Data *test = new Data(new Account(line));
-            cout << test->getValue() << endl;
+            addKey(tree, new Data(new Account(line)));
         }
         customerAcc.close();
     }
     else
         cout << "Unable to open file";
 
+    // DONE searching for customer
+    cout << endl
+         << "Input C_ID of user:" << endl;
+    cin >> userID;
+    ifstream customerList("Customer.txt");
+
+    if (customerList.is_open())
+    {
+        while (getline(customerList, line))
+        { // TODO if user doesnt exist
+            if (!userID.compare(line.substr(0, line.find('|'))))
+            {
+                userData = line;
+            }
+        }
+        customerAcc.close();
+    }
+    else
+        cout << "Unable to open file";
+    // DONE creating file
+    userDataFinal = userData.substr(0, userData.find('|') + 1);
+    userData = userData.substr(userData.find('|') + 1);
+    userDataFinal.append(userData.substr(0, userData.find('|') + 1));
+    userData = userData.substr(userData.find('|') + 1);
+    userDataFinal.append(userData.substr(0, userData.find('|') + 1));
+    userData = userData.substr(userData.find('|') + 1);
+    userDataFinal.append(userData.substr(0, userData.find('|') + 1));
+    ofstream outputFile("output.txt");
+    keyValue = atoi(userID.substr(userID.length() - 4).c_str());
+    temp = findNode(tree, keyValue, numStep);
+    dataNode = findKey(temp, keyValue);
+    if (dataNode != NULL)
+    {
+        for (int i = 0; i < dataNode->accounts.size(); i++)
+        {
+            cout << "Number of steps:" << numStep << endl;
+            outputFile << userDataFinal << dataNode->accounts[i] << '\n';
+        }
+    }
+    else
+    {
+        cout << "Number of steps:" << numStep << endl;
+        outputFile << userDataFinal << "null|null|null|null" << '\n';
+    }
+    outputFile.close();
+    // DONE deleting
+    cout << "Input user for deleting";
+    cin >> userID;
+    keyValue = atoi(userID.substr(userID.length() - 4).c_str());
+    deleteKey(tree, keyValue);
+
+    temp = findNode(tree, keyValue, numStep);
+    if (temp == NULL)
+        cout << "Data doesnt exist. Number of steps: " << numStep << endl;
+    else
+        cout << "Deleting is not working!" << endl;
+
     return 0;
 }
-
-// cout << *tree->branches[0];
-// cout << *tree->branches[1];
-// cout << *tree->branches[2];
-// addKey(tree, new Data(3));
-// addKey(tree, new Data(2));
-// addKey(tree, new Data(7));
-// addKey(tree, new Data(5));
-// addKey(tree, new Data(1));
-// addKey(tree, new Data(0));
-// addKey(tree, new Data(4));
-// addKey(tree, new Data(6));
-// addKey(tree, new Data(8));
-// addKey(tree, new Data(9));
-// addKey(tree, new Data(10));
-// addKey(tree, new Data(11));
-// deleteKey(tree,4);
-// deleteKey(tree,8);
-// deleteKey(tree,11);
-// deleteKey(tree,6);
-// deleteKey(tree, 5);
-// deleteKey(tree, 10);
-// deleteKey(tree, 11);
-// deleteKey(tree, 9);
-// addKey(tree, new Data(10));
-// addKey(tree, new Data(11));
+// switch (expression)
+// {
+// case x:
+//     // code block
+//     break;
+// case y:
+//     // code block
+//     break;
+// default:
+//     // code block
+// }
