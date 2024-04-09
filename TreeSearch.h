@@ -6,9 +6,8 @@
 #include "Stack.h"
 
 typedef struct Node{
-    int data;
-    Node *left,*right;
-};
-
+    void *data;
+    struct Node *left,*right;
+}Node;
 
 #endif

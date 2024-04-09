@@ -3,8 +3,10 @@
 #define STACK_H
 typedef struct StackNode{
     void* data;
-    StackNode* next;
-};
+    struct StackNode* next;
+}StackNode;
 
+void* POP(StackNode* stack);
 void PUSH(StackNode* stack,void* data);
+int STACK_EMPTY(StackNode *stack);
 #endif //STACK_H
