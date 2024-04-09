@@ -1,12 +1,17 @@
 //one way linked list with addition on top
 #ifndef STACK_H
 #define STACK_H
-typedef struct StackNode{
-    void* data;
-    struct StackNode* next;
-}StackNode;
 
-void* POP(StackNode* stack);
-void PUSH(StackNode* stack,void* data);
-int STACK_EMPTY(StackNode *stack);
+#include "LinkedList.h"
+
+typedef LIST_NODE STACK_NODE;
+
+void* POP(STACK_NODE* stack);
+
+void PUSH(STACK_NODE* stack,void* data);
+
+int STACK_EMPTY(STACK_NODE *stack);
+
+STACK_NODE *STACK_INITIALIZE();
+
 #endif //STACK_H
