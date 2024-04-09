@@ -5,6 +5,14 @@
 
 typedef LIST_NODE QUEUE_NODE;
 
-void INSERT(LIST_NODE*,void* data);
+
+QUEUE_NODE *QUEUE_INITIALIZE();
+
+bool QUEUE_EMPTY(QUEUE_NODE* queue);
+
+void INSERT(QUEUE_NODE** queue,void* data);
+
+void* DELETE(QUEUE_NODE** queue);
+
 
 #endif //QUEUE_H

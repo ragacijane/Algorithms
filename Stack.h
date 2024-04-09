@@ -6,11 +6,13 @@
 
 typedef LIST_NODE STACK_NODE;
 
-void* POP(STACK_NODE* stack);
+void* POP(STACK_NODE** stack);
 
-void PUSH(STACK_NODE* stack,void* data);
+void* TOP(STACK_NODE* stack);
 
-int STACK_EMPTY(STACK_NODE *stack);
+void PUSH(STACK_NODE** stack,void* data);
+
+bool STACK_EMPTY(STACK_NODE *stack);
 
 STACK_NODE *STACK_INITIALIZE();
 
