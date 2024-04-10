@@ -4,7 +4,7 @@ typedef LIST_NODE STACK_NODE;
 void* POP(STACK_NODE** stack){
     STACK_NODE *tmp=*stack;
     void* data=tmp->data;
-    DELETE_NODE(stack,tmp);
+    DELETE_ELEMENT(stack, tmp);
     return data;
 }
 

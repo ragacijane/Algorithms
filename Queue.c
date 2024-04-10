@@ -14,7 +14,7 @@ void INSERT(QUEUE_NODE** queue,void* data){
 void* DELETE(QUEUE_NODE** queue){
     QUEUE_NODE* node= GET_TAIL(*queue);
     void* data=node->data;
-    DELETE_NODE(queue,node);
+    DELETE_ELEMENT(queue, node);
     return data;
 }
 

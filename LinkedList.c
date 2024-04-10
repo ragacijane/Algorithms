@@ -24,28 +24,31 @@ void ADD_ON_BOTTOM(LIST_NODE** root,void* data){
     tmp->next=newNode;
 }
 
-void DELETE_NODE(LIST_NODE** root,LIST_NODE* delNode){
+void* DELETE_ELEMENT(LIST_NODE** root, LIST_NODE* node){
     LIST_NODE* temp=*root,*prev,*next;
-    if(temp==delNode){
+    void *data=NULL;
+    if(temp==NULL)return NULL;
+    if(temp == node){
         *root=temp->next;
-        //free(delNode->data);
-        free(delNode);
-        return;
+        data=temp->data;
+        free(node);
+        return data;
     }
     prev=temp;
     temp=temp->next;
     next=temp->next;
     while(temp!=NULL){
-        if(temp==delNode){
+        if(temp == node){
             prev->next=next;
-            //free(delNode->data);
-            free(delNode);
-            return;
+            data=temp->data;
+            free(node);
+            break;
         }
         prev=temp;
         temp=next;
         next=temp->next;
     }
+    return data;
 }
 
 LIST_NODE* GET_TAIL(LIST_NODE* root){
@@ -55,5 +58,5 @@ LIST_NODE* GET_TAIL(LIST_NODE* root){
         if(temp->next == NULL)break;
         temp=temp->next;
     }
-    return temp; //TODO &temp, *temp or temp
+    return temp; // &temp, *temp or temp
 }
